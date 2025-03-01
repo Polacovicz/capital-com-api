@@ -6,9 +6,9 @@ app = Flask(__name__)
 
 # Configuração inicial
 API_URL = "https://api-capital.backend-capital.com/api/v1"
-EMAIL = "seu-email@exemplo.com"
-PASSWORD = "sua-senha-segura"
-API_KEY = "sua-api-key"
+EMAIL = "juliocesarklamt@outlook.com"
+PASSWORD = "99156617aA**"
+API_KEY = "cuSRmE6dgNQnA5tw"
 
 # Função para fazer login
 def login():
