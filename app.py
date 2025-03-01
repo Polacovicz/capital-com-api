@@ -6,21 +6,38 @@ app = Flask(__name__)
 
 # Configuração inicial
 API_URL = "https://api-capital.backend-capital.com/api/v1"
-EMAIL = "juliocesarklamt@outlook.com"
-PASSWORD = "99156617aA**"
-API_KEY = "cuSRmE6dgNQnA5tw"
+EMAIL = os.getenv("EMAIL", "seu-email@exemplo.com")  # Pegando do ambiente
+PASSWORD = os.getenv("PASSWORD", "sua-senha-segura")  # Pegando do ambiente
+API_KEY = os.getenv("API_KEY", "sua-api-key")  # Pegando do ambiente
 
 # Função para fazer login
 def login():
     url = f"{API_URL}/session"
     headers = {"Content-Type": "application/json", "X-CAP-API-KEY": API_KEY}
     data = {"identifier": EMAIL, "password": PASSWORD, "encryptedPassword": False}
-    
-    response = requests.post(url, json=data, headers=headers)
-    if response.status_code == 200:
+
+    try:
+        print("Tentando login na API da Capital.com...")
+        print(f"URL: {url}")
+        print(f"Headers: {headers}")
+        print(f"Payload: {data}")
+
+        response = requests.post(url, json=data, headers=headers)
+
+        print("Status Code:", response.status_code)
+        print("Resposta da API:", response.text)  # Debug: imprime a resposta completa
+
         session_data = response.json()
+
+        if "CST" not in session_data or "X-SECURITY-TOKEN" not in session_data:
+            print("Erro: A resposta da API não contém CST ou X-SECURITY-TOKEN")
+            return None, None  # Retorna erro sem quebrar o código
+
         return session_data["CST"], session_data["X-SECURITY-TOKEN"]
-    return None, None
+
+    except Exception as e:
+        print("Erro ao tentar login:", str(e))
+        return None, None
 
 # Rota para login
 @app.route("/login", methods=["POST"])
@@ -36,7 +53,7 @@ def abrir_posicao():
     data = request.json
     cst = data.get("CST")
     security_token = data.get("X-SECURITY-TOKEN")
-    
+
     url = f"{API_URL}/positions"
     headers = {
         "Content-Type": "application/json",
@@ -61,7 +78,7 @@ def fechar_posicao():
     cst = data.get("CST")
     security_token = data.get("X-SECURITY-TOKEN")
     deal_id = data.get("dealId")
-    
+
     url = f"{API_URL}/positions/otc"
     headers = {
         "Content-Type": "application/json",
