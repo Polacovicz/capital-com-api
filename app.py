@@ -18,22 +18,24 @@ def login():
 
     try:
         print("Tentando login na API da Capital.com...")
-        print(f"URL: {url}")
-        print(f"Headers: {headers}")
-        print(f"Payload: {data}")
-
         response = requests.post(url, json=data, headers=headers)
 
         print("Status Code:", response.status_code)
-        print("Resposta da API:", response.text)  # Debug: imprime a resposta completa
+        print("Headers da Resposta:", response.headers)  # Debug: imprime os cabeçalhos da resposta
+        print("Resposta da API:", response.text)  # Debug: imprime o corpo da resposta
 
-        session_data = response.json()
+        if response.status_code != 200:
+            return None, None
 
-        if "CST" not in session_data or "X-SECURITY-TOKEN" not in session_data:
-            print("Erro: A resposta da API não contém CST ou X-SECURITY-TOKEN")
-            return None, None  # Retorna erro sem quebrar o código
+        # Captura os tokens do cabeçalho da resposta, caso não estejam no corpo
+        cst = response.headers.get("CST", None)
+        security_token = response.headers.get("X-SECURITY-TOKEN", None)
 
-        return session_data["CST"], session_data["X-SECURITY-TOKEN"]
+        if not cst or not security_token:
+            print("Erro: Não foi possível capturar os tokens CST e X-SECURITY-TOKEN")
+            return None, None
+
+        return cst, security_token
 
     except Exception as e:
         print("Erro ao tentar login:", str(e))
