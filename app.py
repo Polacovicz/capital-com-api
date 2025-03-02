@@ -20,6 +20,9 @@ class Config:
         "real": os.getenv("REAL_API_KEY", "sua-real-api-key")
     })
 
+# Instância global de Config
+config = Config()
+
 class CapitalClient:
     def __init__(self):
         self.api_url: Optional[str] = None
@@ -32,8 +35,8 @@ class CapitalClient:
         if account_type not in ["demo", "real"]:
             return False
         self.account_type = account_type
-        self.api_url = Config.API_URLS[account_type]
-        self.api_key = Config.API_KEYS[account_type]
+        self.api_url = config.API_URLS[account_type]
+        self.api_key = config.API_KEYS[account_type]
         return True
 
     def login(self) -> Tuple[Optional[str], Optional[str]]:
@@ -41,7 +44,7 @@ class CapitalClient:
             return None, None
         url = f"{self.api_url}/session"
         headers = {"Content-Type": "application/json", "X-CAP-API-KEY": self.api_key}
-        data = {"identifier": Config.EMAIL, "password": Config.PASSWORD, "encryptedPassword": False}
+        data = {"identifier": config.EMAIL, "password": config.PASSWORD, "encryptedPassword": False}
         try:
             response = requests.post(url, json=data, headers=headers)
             if response.status_code != 200:
@@ -131,13 +134,32 @@ def get_session_details():
     result = client.api_request("GET", "session")
     return jsonify(result), 400 if "error" in result else 200
 
+@app.route("/session", methods=["POST"])
+def create_session():
+    account_type = request.json.get("type", "demo")
+    success, error, status = validate_and_auth(account_type)
+    if not success:
+        return jsonify(error), status
+    cst, token = client.login()
+    if not cst or not token:
+        return jsonify({"error": "Failed to create session"}), 400
+    return jsonify({"CST": cst, "X-SECURITY-TOKEN": token}), 200
+
+@app.route("/login", methods=["GET"])
+def get_login_status():
+    account_type = request.args.get("type", "demo")
+    success, error, status = validate_and_auth(account_type)
+    if not success:
+        return jsonify(error), status
+    return jsonify({"CST": client.cst, "X-SECURITY-TOKEN": client.security_token}), 200
+
 @app.route("/login", methods=["POST"])
 def api_login():
     account_type = request.json.get("type", "demo")
     success, error, status = validate_and_auth(account_type)
     if not success:
         return jsonify(error), status
-    return jsonify({"CST": client.cst, "X-SECURITY-TOKEN": client.security_token})
+    return jsonify({"CST": client.cst, "X-SECURITY-TOKEN": client.security_token}), 200
 
 @app.route("/session/switch", methods=["PUT"])
 def switch_account():
@@ -532,6 +554,11 @@ def remove_from_watchlist(watchlist_id, epic):
         return jsonify(error), status
     result = client.api_request("DELETE", f"watchlists/{watchlist_id}/{epic}")
     return jsonify(result), 400 if "error" in result else 200
+
+# Adicionando um handler básico para a raiz (opcional, para evitar 404)
+@app.route("/", methods=["GET"])
+def root():
+    return jsonify({"message": "Welcome to the Capital.com API Client", "status": "running"}), 200
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
