@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# URLs da API para conta DEMO e REAL
+# URLs da API da Capital.com para conta DEMO e REAL
 API_URLS = {
     "demo": "https://demo-api-capital.backend-capital.com/api/v1",
     "real": "https://api-capital.backend-capital.com/api/v1"
@@ -95,7 +95,6 @@ def open_position():
         "CST": cst,
         "X-CAP-API-KEY": API_KEY
     }
-    # Conforme a documentação, a payload inclui apenas os campos necessários
     payload = {
         "epic": epic,
         "direction": direction,
@@ -116,14 +115,11 @@ def close_position():
     data = request.json
     account_type = data.get("type", "demo")
     deal_id = data.get("dealId")
-
     if not select_account(account_type):
         return jsonify({"error": "Invalid account"}), 400
-
     cst, security_token = login()
     if not cst or not security_token:
         return jsonify({"error": "Authentication required"}), 401
-
     url = f"{API_URL}/positions/{deal_id}"
     headers = {
         "Content-Type": "application/json",
@@ -140,11 +136,9 @@ def api_ping():
     account_type = request.args.get("type", "demo")
     if not select_account(account_type):
         return jsonify({"error": "Invalid account"}), 400
-
     cst, security_token = login()
     if not cst or not security_token:
         return jsonify({"error": "Authentication required"}), 401
-
     url = f"{API_URL}/ping"
     headers = {
         "Content-Type": "application/json",
@@ -161,11 +155,9 @@ def get_account():
     account_type = request.args.get("type", "demo")
     if not select_account(account_type):
         return jsonify({"error": "Invalid account"}), 400
-
     cst, security_token = login()
     if not cst or not security_token:
         return jsonify({"error": "Authentication required"}), 401
-
     url = f"{API_URL}/accounts"
     headers = {
         "Content-Type": "application/json",
@@ -182,11 +174,9 @@ def get_positions():
     account_type = request.args.get("type", "demo")
     if not select_account(account_type):
         return jsonify({"error": "Invalid account"}), 400
-
     cst, security_token = login()
     if not cst or not security_token:
         return jsonify({"error": "Authentication required"}), 401
-
     url = f"{API_URL}/positions"
     headers = {
         "Content-Type": "application/json",
@@ -203,11 +193,9 @@ def confirm_trade(deal_reference):
     account_type = request.args.get("type", "demo")
     if not select_account(account_type):
         return jsonify({"error": "Invalid account"}), 400
-
     cst, security_token = login()
     if not cst or not security_token:
         return jsonify({"error": "Authentication required"}), 401
-
     url = f"{API_URL}/confirms/{deal_reference}"
     headers = {
         "Content-Type": "application/json",
@@ -219,5 +207,6 @@ def confirm_trade(deal_reference):
     return jsonify(response.json())
 
 if __name__ == "__main__":
+    # O serviço será implantado no domínio https://capital-com-api.onrender.com
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
