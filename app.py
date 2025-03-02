@@ -409,7 +409,7 @@ def get_category_subnodes(node_id):
         return jsonify(error), status
     params = {"limit": request.args.get("limit")}
     result = client.api_request("GET", f"marketnavigation/{node_id}", params=params)
-    Return jsonify(result), 400 if "error" in result else 200
+    return jsonify(result), 400 if "error" in result else 200
 
 @app.route("/markets", methods=["GET"])
 def get_markets_details():
