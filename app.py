@@ -2,23 +2,23 @@ from flask import Flask, request, jsonify
 import requests
 import os
 from typing import Dict, Optional, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 app = Flask(__name__)
 
 # Configurações
 @dataclass
 class Config:
-    API_URLS: Dict[str, str] = {
+    API_URLS: Dict[str, str] = field(default_factory=lambda: {
         "demo": "https://demo-api-capital.backend-capital.com/api/v1",
         "real": "https://api-capital.backend-capital.com/api/v1"
-    }
+    })
     EMAIL: str = os.getenv("EMAIL", "seu-email@exemplo.com")
     PASSWORD: str = os.getenv("PASSWORD", "sua-senha-segura")
-    API_KEYS: Dict[str, str] = {
+    API_KEYS: Dict[str, str] = field(default_factory=lambda: {
         "demo": os.getenv("DEMO_API_KEY", "sua-demo-api-key"),
         "real": os.getenv("REAL_API_KEY", "sua-real-api-key")
-    }
+    })
 
 class CapitalClient:
     def __init__(self):
@@ -409,7 +409,7 @@ def get_category_subnodes(node_id):
         return jsonify(error), status
     params = {"limit": request.args.get("limit")}
     result = client.api_request("GET", f"marketnavigation/{node_id}", params=params)
-    return jsonify(result), 400 if "error" in result else 200
+    Return jsonify(result), 400 if "error" in result else 200
 
 @app.route("/markets", methods=["GET"])
 def get_markets_details():
